@@ -1,14 +1,16 @@
-export interface Vendor {
+export type Vendor = {
     id: string;
     name: string;
     description?: string;
     category: string;
+    coverImageUrl?: string;
+    logoImageUrl?: string;
     isActive: boolean;
     createdOn: Date;
     outlets: Outlet[];
 }
 
-export interface Outlet {
+export type Outlet = {
     id: number;
     vendorId: number;
     address: string;

@@ -1,9 +1,11 @@
-'use client';
+"use client"
 
-import { ColumnDef } from '@tanstack/react-table';
-import { Vendor } from '@/types';
-import { Button } from '@/components/ui/button';
-import { ArrowUpDown, MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Vendor } from "@/types"
+import { ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,106 +13,96 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useDeleteVendor } from '@/hooks/use-vendors';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu"
 
 export const columns: ColumnDef<Vendor>[] = [
     {
-        accessorKey: 'id',
-        header: 'ID',
-        cell: ({ row }) => <div className="font-mono">{row.getValue('id')}</div>,
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && "indeterminate")
+                }
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
     },
     {
-        accessorKey: 'name',
+        accessorKey: "id",
+        header: "Id",
+    },
+    {
+        accessorKey: "name",
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                    className="px-0"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
                     Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
-            );
+            )
         },
     },
     {
-        accessorKey: 'description',
-        header: 'Description',
-        cell: ({ row }) => (
-            <div className="line-clamp-2 max-w-[300px]">
-                {row.getValue('description') || 'N/A'}
-            </div>
-        ),
+        accessorKey: "description",
+        header: "Description",
     },
     {
-        accessorKey: 'category',
-        header: 'Category',
-        cell: ({ row }) => (
-            <div className="line-clamp-2 max-w-[300px]">
-                {row.getValue('category') || 'N/A'}
-            </div>
-        ),
+        accessorKey: "category",
+        header: "Category",
     },
-    //   {
-    //     accessorKey: 'price',
-    //     header: () => <div className="text-right">Price</div>,
-    //     cell: ({ row }) => {
-    //       const price = parseFloat(row.getValue('price'));
-    //       const formatted = new Intl.NumberFormat('en-US', {
-    //         style: 'currency',
-    //         currency: 'USD',
-    //       }).format(price);
-
-    //       return <div className="text-right font-medium">{formatted}</div>;
-    //     },
-    //   },
-    //   {
-    //     accessorKey: 'stock',
-    //     header: () => <div className="text-right">Stock</div>,
-    //     cell: ({ row }) => {
-    //       return <div className="text-right">{row.getValue('stock')}</div>;
-    //     },
-    //   },
     {
-        accessorKey: 'createdOn',
-        header: 'Created',
+        accessorKey: "isActive",
+        header: "Is Active",
+    },
+    // {
+    //     accessorKey: "coverImageUrl",
+    //     header: "Cover Image",
+    // },
+    // {
+    //     accessorKey: "logoImageUrl",
+    //     header: "Logo Image",
+    // },
+    {
+        accessorKey: "createdOn",
+        header: () => <div className="text-right">Created On</div>,
         cell: ({ row }) => {
-            const date = new Date(row.getValue('createdAt'));
-            return date.toLocaleDateString();
+            const createdOn = row.getValue("createdOn") as string | number | Date;
+            const formatted = new Intl.DateTimeFormat("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+            }).format(new Date(createdOn));
+
+            return <div className="text-right font-medium">{formatted}</div>
+
         },
     },
+    // {
+    //     accessorKey: "outlets",
+    //     header: "Outlets",
+    // },
     {
-        id: 'actions',
+        id: "actions",
         cell: ({ row }) => {
-            const vendor = row.original;
-            const router = useRouter();
-            const deleteMutation = useDeleteVendor();
-
-            const handleDelete = async () => {
-                try {
-                    await deleteMutation.mutateAsync(vendor.id);
-                    toast('Vendor deleted successfully', {
-                        description: 'The vendor has been removed.',
-                        action: {
-                            label: "Undo",
-                            onClick: () => console.log("Undo"),
-                        },
-                    });
-                } catch (error) {
-                    toast('Failed to delete vendor', {
-                        description: 'error',
-                        action: {
-                            label: "Undo",
-                            onClick: () => console.log(error),
-                        },
-                    });
-                }
-            };
+            const model = row.original
 
             return (
                 <DropdownMenu>
@@ -123,34 +115,17 @@ export const columns: ColumnDef<Vendor>[] = [
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(vendor.id)}
+                            onClick={() => navigator.clipboard.writeText(model.id)}
                         >
-                            Copy ID
+                            Copy payment ID
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/vendors/${vendor.id}`} className="flex items-center">
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => router.push(`/dashboard/vendors/${vendor.id}/edit`)}
-                        >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={handleDelete}
-                            disabled={deleteMutation.isPending}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                        </DropdownMenuItem>
+                        <DropdownMenuItem>View customer</DropdownMenuItem>
+                        <DropdownMenuItem>View payment details</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            );
+            )
         },
     },
-];
+]
+
