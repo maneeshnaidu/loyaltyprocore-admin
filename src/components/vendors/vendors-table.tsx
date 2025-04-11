@@ -1,5 +1,4 @@
 "use client"
-
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -30,13 +29,16 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
+import { PlusIcon } from "lucide-react"
+import { useCreateVendor } from "@/hooks/use-vendors"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
 }
 
-export function DataTable<TData, TValue>({
+export function VendorTable<TData, TValue>({
     columns,
     data,
 }: DataTableProps<TData, TValue>) {
@@ -44,6 +46,14 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
+    const [formData, setFormData] = useState({
+        name: "",
+        description: "",
+        category: "",
+    });
+
+    const createVendorMutation = useCreateVendor();
+
     const table = useReactTable({
         data,
         columns,
@@ -63,9 +73,23 @@ export function DataTable<TData, TValue>({
         },
     })
 
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        createVendorMutation.mutate(formData, {
+            onSuccess: () => {
+                setFormData({ name: "", category: "", description: "" });
+                console.log("Vendor added successfully");
+            },
+            onError: (error) => {
+                console.error("Error adding vendor:", error);
+            },
+        });
+    };
+
     return (
         <div>
-            <div className="flex items-center py-4">
+            <div className="flex items-center py-4 gap-2">
                 <Input
                     placeholder="Filter name..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -76,7 +100,7 @@ export function DataTable<TData, TValue>({
                 />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button variant="outline" className="ml-auto" size="sm">
                             Columns
                         </Button>
                     </DropdownMenuTrigger>
@@ -102,6 +126,64 @@ export function DataTable<TData, TValue>({
                             })}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                            <PlusIcon />
+                            <span className="hidden lg:inline">Add Vendor</span>
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add Vendor</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleFormSubmit}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Name</label>
+                                <Input
+                                    value={formData.name}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, name: e.target.value })
+                                    }
+                                    placeholder="Vendor Name"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">
+                                    Description
+                                </label>
+                                <Input
+                                    value={formData.description}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, description: e.target.value })
+                                    }
+                                    placeholder="Vendor Description"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Category</label>
+                                <Input
+                                    value={formData.category}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, category: e.target.value })
+                                    }
+                                    placeholder="Vendor Category"
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                                <Button variant="outline" type="button">
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={createVendorMutation.isPending}>
+                                    {createVendorMutation.isPending ? "Submitting..." : "Submit"}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
             <div className="rounded-md border">
                 <Table>
@@ -166,5 +248,6 @@ export function DataTable<TData, TValue>({
                 </Button>
             </div>
         </div>
+
     )
 }

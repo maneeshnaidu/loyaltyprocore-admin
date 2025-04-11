@@ -14,6 +14,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Switch } from "../ui/switch"
+import apiClient from "@/lib/api-client"
 
 export const columns: ColumnDef<Vendor>[] = [
     {
@@ -66,7 +68,16 @@ export const columns: ColumnDef<Vendor>[] = [
     },
     {
         accessorKey: "isActive",
-        header: "Is Active",
+        header: "Status",
+        cell: ({ row }) => {
+            const vendor = row.original;
+            return (
+                <Switch
+                    checked={vendor.isActive}
+                    onCheckedChange={(value) => handleToggleActive(vendor.id, value)}
+                />
+            );
+        }
     },
     // {
     //     accessorKey: "coverImageUrl",
@@ -128,4 +139,14 @@ export const columns: ColumnDef<Vendor>[] = [
         },
     },
 ]
+
+const handleToggleActive = async (id: string, isActive: boolean) => {
+    try {
+        // Call your API to update the isActive state
+        await apiClient.patch(`/vendors/${id}`, { isActive });
+        console.log(`Vendor ${id} is now ${isActive ? "active" : "inactive"}`);
+    } catch (error) {
+        console.error("Failed to update vendor status:", error);
+    }
+};
 

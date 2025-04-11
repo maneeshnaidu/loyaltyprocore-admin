@@ -33,4 +33,13 @@ export const useDeleteVendor = () => {
     });
 };
 
-// Add similar hooks for update and delete
+export const useUpdateVendor = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (vendor: Vendor) =>
+            apiClient.put(`/vendors/${vendor.id}`, vendor),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vendors'] });
+        },
+    });
+};
