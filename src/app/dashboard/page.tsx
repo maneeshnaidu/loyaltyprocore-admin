@@ -14,14 +14,28 @@ import {
 import { VendorTable } from "@/components/vendors/vendors-table"
 import { useVendors } from "@/hooks/use-vendors"
 import { columns } from "@/components/vendors/columns"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useRouter } from "next/navigation"
+// import { handleError } from "../helpers/error-handler"
 
 export default function Page() {
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
+  const [activeMenu, setActiveMenu] = useState<string>("Dashboard");
   const { data: vendors, isLoading, error } = useVendors();
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading vendors</div>;
-  if (!vendors || vendors.length === 0) {
-    return <div>No vendors available</div>; // Show a message for empty data
+
+  // Redirect unauthenticated users to the login page
+  useEffect(() => {
+    if (isLoggedIn === null) {
+      router.push("/login"); // Redirect to login if not authenticated
+    }
+  }, [isLoggedIn, router]);
+
+  if (!isLoggedIn) {
+    return null; // Prevent rendering until authentication is verified
   }
+
   return (
     <SidebarProvider
       style={
@@ -31,9 +45,9 @@ export default function Page() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar setActiveMenu={setActiveMenu} variant="inset" />
       <SidebarInset>
-        <SiteHeader />
+        <SiteHeader user={undefined} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -43,7 +57,14 @@ export default function Page() {
               </div>
               {/* <DataTable data={data} /> */}
               <div className="px-4 lg:px-6">
-                <VendorTable columns={columns} data={vendors} />
+                {activeMenu === "Vendors" && (
+                  <>
+                    {isLoading && <div>Loading...</div>}
+                    {error && <div>Error loading vendors</div>}
+                    {vendors && <VendorTable columns={columns} data={vendors} />}
+                  </>
+                )}
+                {activeMenu !== "Vendors" && <div>Welcome to {activeMenu}</div>}
               </div>
             </div>
           </div>

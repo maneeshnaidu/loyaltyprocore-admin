@@ -1,12 +1,8 @@
-import React from 'react'
-import AuthForm from '../AuthForm'
-
-// type Props = {}
+import React from 'react';
+import AuthForm from '../AuthForm';
 
 const LoginPage = () => {
-    return (
-        <AuthForm />
-    )
-}
+    return <AuthForm />;
+};
 
-export default LoginPage
+export default LoginPage;

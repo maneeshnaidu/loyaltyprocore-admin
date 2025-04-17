@@ -10,7 +10,7 @@ export interface Vendor {
     outlets?: Outlet[];
 }
 
-export type Outlet = {
+export interface Outlet {
     id: number;
     vendorId: number;
     address: string;
@@ -37,5 +37,46 @@ export interface Device {
     isActive: boolean;
     createdOn: Date;
 }
+
+export interface UserProfileToken {
+    userName: string;
+    email: string;
+    token: string;
+}
+
+export interface UserProfile {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    userCode: number;
+    email: string;
+    token: string;
+}
+
+export interface UserContextType {
+    user: UserProfile | null;
+    token: string | null;
+    registerVendor: (
+        firstName: string,
+        lastName: string,
+        username: string,
+        email: string,
+        password: string,
+        name: string,
+        description: string,
+        category: string
+    ) => void;
+    registerUser: (
+        email: string,
+        username: string,
+        password: string
+    ) => void;
+    loginUser: (
+        username: string,
+        password: string
+    ) => void;
+    logoutUser: () => Promise<void>;
+    isLoggedIn: () => boolean;
+};
 
 // Add other types as needed

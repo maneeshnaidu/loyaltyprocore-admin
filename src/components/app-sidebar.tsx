@@ -33,13 +33,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "./providers/auth-provider"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+  // user: {
+  //   name: "shadcn",
+  //   email: "m@example.com",
+  //   avatar: "/avatars/shadcn.jpg",
+  // },
   navMain: [
     {
       title: "Dashboard",
@@ -52,7 +53,7 @@ const data = {
       icon: IconBuildingCommunity,
     },
     {
-      title: "Lifecycle",
+      title: "Outlets",
       url: "#",
       icon: IconListDetails,
     },
@@ -156,7 +157,12 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setActiveMenu,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { setActiveMenu: (menu: string) => void }) {
+  const { user } = useAuth()
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -180,7 +186,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

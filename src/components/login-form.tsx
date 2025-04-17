@@ -10,10 +10,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+type Props = {
+  className?: string,
+  onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void,
+}
 export function LoginForm({
   className,
+  onSubmit,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: Props) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -24,7 +29,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={onSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
