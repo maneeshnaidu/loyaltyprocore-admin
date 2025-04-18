@@ -39,23 +39,32 @@ export interface Device {
 }
 
 export interface UserProfileToken {
-    userName: string;
-    email: string;
-    token: string;
-}
-
-export interface UserProfile {
     firstName: string;
     lastName: string;
     userName: string;
-    userCode: number;
     email: string;
     token: string;
+    roles?: string[];
+}
+
+export type UserProfile = {
+    firstName: string,
+    lastName: string,
+    userName: string,
+    email: string,
+    roles?: string[],
+}
+
+export type RefreshToken = {
+    token: string;
+    refreshToken: string;
+    roles: [];
 }
 
 export interface UserContextType {
     user: UserProfile | null;
-    token: string | null;
+    // token: string | null;
+    loading: boolean;
     registerVendor: (
         firstName: string,
         lastName: string,
@@ -77,6 +86,7 @@ export interface UserContextType {
     ) => void;
     logoutUser: () => Promise<void>;
     isLoggedIn: () => boolean;
+    refreshToken: () => Promise<string | null>;
 };
 
 // Add other types as needed

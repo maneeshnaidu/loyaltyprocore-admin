@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { loginUser } from "@/lib/auth-service";
 import { useAuth } from "@/components/providers/auth-provider";
+import { toast } from "sonner";
 
 const AuthForm = () => {
     const { loginUser } = useAuth();
@@ -21,6 +22,8 @@ const AuthForm = () => {
     const [mounted, setMounted] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const searchParams = useSearchParams();
+    const returnUrl = searchParams.get('returnUrl') || '/dashboard';
 
     // Handle hydration mismatch
     useEffect(() => {
@@ -38,10 +41,10 @@ const AuthForm = () => {
 
         try {
             await loginUser(username, password);
-            router.push("/dashboard");
+            router.push(returnUrl); // Redirect to the return URL after successful login
         } catch (err) {
-            console.error("Login failed:", err);
-            setError("Invalid username or password");
+            setError('Error: ' + err);
+            toast.error("Invalid credentials. Please try again.");
         } finally {
             setIsLoading(false);
         }

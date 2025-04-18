@@ -2,11 +2,11 @@
 
 import apiClient from "@/lib/api-client";
 import { loginAPI, logoutAPI, registerAPI, registerVendorAPI } from "@/lib/auth-service";
-import { UserContextType, UserProfile } from "@/types";
-import { redirect, useRouter } from "next/navigation";
+import { getToken, removeToken, setToken } from "@/lib/auth-storage";
+import { RefreshToken, UserContextType, UserProfile } from "@/types";
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
-
 
 type Props = { children: React.ReactNode };
 
@@ -14,19 +14,31 @@ const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export const UserProvider = ({ children }: Props) => {
     const router = useRouter();
-    const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<UserProfile | null>(null);
-    const [isReady, setIsReady] = useState(false);
+    const [loading, setLoading] = useState(true);
 
+    // Initializing token and user from local storage
     useEffect(() => {
-        const user = localStorage.getItem("user");
-        const token = localStorage.getItem("token");
-        if (user && token) {
-            setUser(JSON.parse(user));
-            setToken(token);
-            apiClient.defaults.headers.common["Authorization"] = "Bearer " + token;
+        async function loadUser() {
+            try {
+                const token = getToken();
+                const userData = localStorage.getItem("user");
+                if (token && userData) {
+                    setToken(token);
+                    if (userData) {
+                        const parsedUser = JSON.parse(userData);
+                        setUser(parsedUser as UserProfile);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading user:", error);
+                logoutAPI(); // Clear token if there's an error
+                localStorage.removeItem("user");
+            } finally {
+                setLoading(false);
+            }
         }
-        setIsReady(true);
+        loadUser();
     }, []);
 
     const registerVendor = async (
@@ -51,8 +63,10 @@ export const UserProvider = ({ children }: Props) => {
         )
             .then((res) => {
                 if (res) {
-                    localStorage.setItem("token", res?.data.token);
+                    setToken(res?.data.token);
                     const userObj = {
+                        firstName: res?.data.firstName,
+                        lastName: res?.data.lastName,
                         userName: res?.data.userName,
                         email: res?.data.email,
                     };
@@ -76,8 +90,10 @@ export const UserProvider = ({ children }: Props) => {
         await registerAPI(email, username, password)
             .then((res) => {
                 if (res) {
-                    localStorage.setItem("token", res?.data.token);
+                    setToken(res?.data.token);
                     const userObj = {
+                        firstName: res?.data.firstName,
+                        lastName: res?.data.lastName,
                         userName: res?.data.userName,
                         email: res?.data.email,
                     };
@@ -98,15 +114,16 @@ export const UserProvider = ({ children }: Props) => {
         await loginAPI(username, password)
             .then((res) => {
                 if (res) {
-                    console.log(res);
-                    localStorage.setItem("token", res?.data.token);
                     const userObj = {
-                        userName: res?.data.userName,
-                        email: res?.data.email,
+                        firstName: res?.firstName,
+                        lastName: res?.lastName,
+                        userName: res?.userName,
+                        email: res?.email,
+                        roles: res?.roles,
                     };
                     localStorage.setItem("user", JSON.stringify(userObj));
-                    if (res.data.token !== null) {
-                        setToken(res.data.token);
+                    if (res.token !== null) {
+                        setToken(res.token);
                     }
                     setUser(userObj!);
                     toast.success("Login Success!");
@@ -125,28 +142,56 @@ export const UserProvider = ({ children }: Props) => {
         try {
             await logoutAPI(); // Call the logout API
             clearAuthData(); // Clear local storage and reset state
+            console.log("Logged out successfully");
             toast.success("Logged out successfully!");
-            redirect("/login"); // Redirect to the login page
+            router.push("/login"); // Redirect to the login page
 
         } catch (error) {
-            console.error("Logout failed:", error);
+            console.log("Logout failed:", error);
             toast.error("Failed to log out. Please try again.");
+        }
+    };
+
+    const refreshToken = async (): Promise<string | null> => {
+        try {
+            const refreshToken = getToken();
+            if (!refreshToken) {
+                logoutUser();
+                return null;
+            }
+
+            const { data } = await apiClient.post<RefreshToken>('/api/account/refresh-token', { refreshToken });
+
+            setToken(data.token); // Update the token in local storage
+
+            return getToken(); // Return the new token
+        } catch (error) {
+            console.error('Token refresh error:', error);
+            logoutUser();
+            return null;
         }
     };
 
     // Helper function to clear authentication data
     const clearAuthData = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-        setToken(null);
+        removeToken(); // Clear the token from storage
+        setUser(null); // Reset user state
     };
 
     return (
         <UserContext.Provider
-            value={{ loginUser, user, token, logoutUser, isLoggedIn, registerUser, registerVendor }}
+            value={{
+                loginUser,
+                user,
+                loading,
+                logoutUser,
+                isLoggedIn,
+                registerUser,
+                registerVendor,
+                refreshToken
+            }}
         >
-            {isReady ? children : null}
+            {!loading && children}
         </UserContext.Provider>
     );
 }

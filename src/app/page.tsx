@@ -44,7 +44,7 @@ export default function LandingPage() {
                         <span className="text-primary">Grow Your Business</span>
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-[600px]">
-                        Transform your business with our powerful rewards platform. 
+                        Transform your business with our powerful rewards platform.
                         Engage customers, drive loyalty, and boost revenue.
                     </p>
                     <div className="flex gap-4">

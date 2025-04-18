@@ -1,4 +1,4 @@
-import { UserProfile, UserProfileToken } from "@/types";
+import { UserProfileToken } from "@/types";
 import apiClient from "./api-client";
 import { setToken } from "./auth-storage";
 import { handleError } from "@/app/helpers/error-handler";
@@ -52,7 +52,7 @@ export const loginAPI = async (
     password: string
 ) => {
     try {
-        const response = await apiClient.post<UserProfile>("/account/login", {
+        const response = await apiClient.post<UserProfileToken>("/account/login", {
             username,
             password,
         });
@@ -84,8 +84,9 @@ export const logoutAPI = async () => {
     try {
         // Call logout endpoint if your API has one
         const response = await apiClient.post("/account/logout");
+        console.log('Logout response:', response);
         // Handle the response
-        if (response.status === 204) {
+        if (response.status === 204 || response.status === 200) {
             return true; // Logout successful
         }
     } catch (error) {
