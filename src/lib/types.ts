@@ -1,3 +1,5 @@
+"use client"
+
 import { z } from "zod";
 
 const LoginFormSchema = z.object({
@@ -21,6 +23,15 @@ const RegisterVendorFormSchema = z.object({
     name: z.string().trim(),
     description: z.string().trim(),
     category: z.string().trim(),
+    logoImage: z
+        .instanceof(File)
+        .refine((file) => file.size <= 5 * 1024 * 1024, "File size must be under 5MB")
+        .optional(),
+    // logo: z.string().optional(),
+    coverImage: z
+        .instanceof(File)
+        .refine((file) => file.size <= 5 * 1024 * 1024, "File size must be under 5MB")
+        .optional(),
 })
 
 const ForgotPasswordFormSchema = z.object({

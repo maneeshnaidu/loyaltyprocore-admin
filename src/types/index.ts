@@ -1,13 +1,20 @@
 export interface Vendor {
-    id: string;
-    name: string;
-    description?: string;
-    category: string;
-    coverImageUrl?: string;
-    logoImageUrl?: string;
-    isActive?: boolean;
-    createdOn?: Date;
-    outlets?: Outlet[];
+    id: string,
+    firstName: string,
+    lastName: string,
+    username: string,
+    email: string,
+    password: string,
+    name: string,
+    description?: string,
+    category: string,
+    coverImage?: File | null,
+    logoImage?: File | null,
+    coverImageUrl?: string,
+    logoImageUrl?: string,
+    isActive?: boolean,
+    createdOn?: Date,
+    outlets?: Outlet[]
 }
 
 export interface Outlet {
