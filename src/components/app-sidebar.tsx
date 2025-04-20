@@ -36,11 +36,6 @@ import {
 import { useAuth } from "./providers/auth-provider"
 
 const data = {
-  // user: {
-  //   name: "shadcn",
-  //   email: "m@example.com",
-  //   avatar: "/avatars/shadcn.jpg",
-  // },
   navMain: [
     {
       title: "Dashboard",
@@ -49,12 +44,12 @@ const data = {
     },
     {
       title: "Vendors",
-      url: "/dashboard/vendors",
+      url: "/vendors",
       icon: IconBuildingCommunity,
     },
     {
       title: "Outlets",
-      url: "#",
+      url: "/outlets",
       icon: IconListDetails,
     },
     {
@@ -69,7 +64,7 @@ const data = {
     },
     {
       title: "Team",
-      url: "#",
+      url: "/users",
       icon: IconUsers,
     },
   ],
@@ -163,6 +158,23 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { setActiveMenu: (menu: string) => void }) {
   const { user } = useAuth()
+
+  // Determine user role and set active menu
+  const isSuperAdminRole = user?.roles?.includes("SuperAdmin");
+
+  // Dynamically modify the navigation menu based on the user's role
+  const navMain = data.navMain
+    .map((item) => {
+      if (item.title === "Vendors" && !isSuperAdminRole) {
+        return null; // Hide the "Vendors" menu if the user is not a Vendor
+      }
+      if (item.title === "Team" && isSuperAdminRole) {
+        return { ...item, title: "Users" }; // Rename "Team" to "Users" for Team role
+      }
+      return item;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null); // Explicitly filter out null values
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -181,7 +193,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

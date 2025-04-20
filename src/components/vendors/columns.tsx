@@ -74,10 +74,10 @@ export const columns: ColumnDef<Vendor>[] = [
             return (
                 <Switch
                     checked={vendor.isActive}
-                    onCheckedChange={(value) => handleToggleActive(vendor.id, value)}
+                    onCheckedChange={() => handleToggleActive(vendor.id)}
                 />
             );
-        }
+        },
     },
     // {
     //     accessorKey: "coverImageUrl",
@@ -116,37 +116,40 @@ export const columns: ColumnDef<Vendor>[] = [
             const model = row.original
 
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(model.id)}
-                        >
-                            Copy payment ID
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(model.id)}
+                            >
+                                Edit Vendor
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>View customer</DropdownMenuItem>
+                            <DropdownMenuItem>View payment details</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </>
             )
         },
     },
 ]
 
-const handleToggleActive = async (id: string, isActive: boolean) => {
+const handleToggleActive = async (id: string) => {
     try {
-        // Call your API to update the isActive state
-        await apiClient.patch(`/vendors/${id}`, { isActive });
-        console.log(`Vendor ${id} is now ${isActive ? "active" : "inactive"}`);
+        // Call your API to toggle the active state
+        await apiClient.patch(`/vendors/${id}/toggle-active`);
+
+        console.log(`Vendor ${id} active state toggled successfully.`);
     } catch (error) {
-        console.error("Failed to update vendor status:", error);
+        console.error("Failed to toggle vendor status:", error);
     }
 };
 

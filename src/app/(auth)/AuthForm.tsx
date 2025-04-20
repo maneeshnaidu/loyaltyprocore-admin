@@ -17,7 +17,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 
 const AuthForm = () => {
-    const { loginUser } = useAuth();
+    const { user, loginUser } = useAuth();
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [error, setError] = useState("");
@@ -27,8 +27,12 @@ const AuthForm = () => {
 
     // Handle hydration mismatch
     useEffect(() => {
+        // Check if the user is already logged in
+        if (user) {
+            router.push(returnUrl); // Redirect to the return URL if already logged in
+        }
         setMounted(true);
-    }, []);
+    }, [returnUrl, router, user]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input"
 import { RegisterVendorFormSchema } from "@/lib/types"
 import { useCreateVendor } from "@/hooks/use-vendors"
 import { Button } from "../ui/button"
-import { Vendor } from "@/types"
 
 type formSchema = z.infer<typeof RegisterVendorFormSchema>;
 
@@ -41,22 +40,22 @@ export function VendorForm() {
 
     const onSubmit = async (data: formSchema) => {
         try {
-            const newVendor: Vendor = {
-                id: "", // Provide default or placeholder values for all required fields
-                firstName: data.firstName,
-                lastName: data.lastName,
-                username: data.username,
-                email: data.email,
-                password: data.password,
-                name: data.name,
-                description: data.description,
-                category: data.category,
-                logoImage: data.logoImage,
-                coverImage: data.coverImage,
-            };
-
-            console.log("Form data:", newVendor); // Log the form data
-            await createVendorMutation.mutateAsync(newVendor);
+            const formData = new FormData();
+            formData.append("firstName", data.firstName);
+            formData.append("lastName", data.lastName);
+            formData.append("username", data.username);
+            formData.append("email", data.email);
+            formData.append("password", data.password);
+            formData.append("name", data.name);
+            formData.append("description", data.description);
+            formData.append("category", data.category);
+            if (data.logoImage) {
+                formData.append("logoImage", data.logoImage);
+            }
+            if (data.coverImage) {
+                formData.append("coverImage", data.coverImage);
+            }
+            await createVendorMutation.mutateAsync(formData);
             // setOpen(false); // Close dialog
         } catch (error) {
             console.error("Error adding vendor:", error);

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { Vendor } from '@/types';
+import { UpdateVendorRequestDto, UpdateVendorResponse, Vendor } from '@/types';
 
 export const useVendors = () => {
     return useQuery({
@@ -15,8 +15,12 @@ export const useVendors = () => {
 export const useCreateVendor = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (vendor: Omit<Vendor, 'id'>) =>
-            apiClient.post('/vendors', vendor),
+        mutationFn: (vendor: FormData) =>
+            apiClient.post('/vendors', vendor, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['vendors'] });
         },
@@ -33,13 +37,46 @@ export const useDeleteVendor = () => {
     });
 };
 
+// export const useUpdateVendor = () => {
+//     return useMutation({
+//         mutationFn: async (formData: FormData) => {
+//             const response = await fetch('/api/vendors', {
+//                 method: 'PUT',
+//                 body: formData, // No JSON.stringify needed for FormData
+//             });
+//             if (!response.ok) {
+//                 throw new Error('Network response was not ok');
+//             }
+//             return response.json();
+//         }
+//     });
+// }
+
 export const useUpdateVendor = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (vendor: Vendor) =>
-            apiClient.put(`/vendors/${vendor.id}`, vendor),
+        mutationFn: async (payload: { id: number; data: UpdateVendorRequestDto }) => {
+            const { id, data } = payload;
+            const response = await apiClient.put<UpdateVendorResponse>(
+                `/vendors/${id}`,
+                data,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            return response.data;
+        },
+        onError: (error: unknown) => {
+            console.error("Update vendor error:", error);
+            throw error; // Let the calling component handle the error
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['vendors'] });
+            // Invalidate and refetch vendors query
+            queryClient.invalidateQueries({
+                queryKey: ['vendors']
+            });
         },
     });
 };

@@ -1,5 +1,5 @@
 export interface Vendor {
-    id: string,
+    id: number,
     firstName: string,
     lastName: string,
     username: string,
@@ -15,6 +15,19 @@ export interface Vendor {
     isActive?: boolean,
     createdOn?: Date,
     outlets?: Outlet[]
+}
+
+export interface UpdateVendorRequestDto {
+    name: string;
+    description?: string;
+    category: string;
+    // Add other fields your backend expects
+}
+
+export interface UpdateVendorResponse {
+    id: number;
+    name: string;
+    // Include other fields returned by your API
 }
 
 export interface Outlet {
@@ -45,6 +58,17 @@ export interface Device {
     createdOn: Date;
 }
 
+export type Point = {
+    id: number;
+    customerId: string;
+    rewardId: number;
+    vendorId: number;
+    outletId?: number;
+    points: number;
+    level: number;
+    lastUpdatedOn: Date;
+}
+
 export interface UserProfileToken {
     firstName: string;
     lastName: string;
@@ -60,6 +84,21 @@ export type UserProfile = {
     userName: string,
     email: string,
     roles?: string[],
+}
+
+export type UserModel = {
+    id: string,
+    userCode: number,
+    firstName: string,
+    lastName?: string,
+    userName: string,
+    password: string,
+    email: string,
+    vendorId?: number,
+    outletId?: number,
+    roles?: string[],
+    favoriteVendors?: Vendor[],
+    stamps?: Point[],
 }
 
 export type RefreshToken = {
@@ -83,9 +122,12 @@ export interface UserContextType {
         category: string
     ) => void;
     registerUser: (
+        firstName: string,
+        lastName: string,
         email: string,
         username: string,
-        password: string
+        password: string,
+        admin: string
     ) => void;
     loginUser: (
         username: string,

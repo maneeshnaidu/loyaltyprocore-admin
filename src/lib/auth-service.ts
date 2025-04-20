@@ -31,19 +31,41 @@ export const registerVendorAPI = async (
 };
 
 export const registerAPI = async (
+    firstName: string,
+    lastName: string,
     email: string,
     username: string,
-    password: string
+    password: string,
+    admin: string
 ) => {
-    try {
-        const response = await apiClient.post<UserProfileToken>("/account/register", {
-            email,
-            username,
-            password,
-        });
-        return response;
-    } catch (error) {
-        handleError(error);
+    if (admin == null || admin == "") {
+        try {
+            const response = await apiClient.post<UserProfileToken>("/account/register", {
+                firstName,
+                lastName,
+                email,
+                username,
+                password,
+                admin
+            });
+            return response;
+        } catch (error) {
+            handleError(error);
+        }
+    } else {
+        try {
+            const response = await apiClient.post<UserProfileToken>("/users/add-staff", {
+                firstName,
+                lastName,
+                email,
+                username,
+                password,
+                admin
+            });
+            return response;
+        } catch (error) {
+            handleError(error);
+        }
     }
 };
 
@@ -52,6 +74,8 @@ export const loginAPI = async (
     password: string
 ) => {
     try {
+        console.log('Attempting login with username:', username);
+
         const response = await apiClient.post<UserProfileToken>("/account/login", {
             username,
             password,
@@ -64,14 +88,19 @@ export const loginAPI = async (
         const token = response.data.token;
 
         if (!token) {
+            console.error('No token in login response:', response.data);
             throw new Error('No token received from the server');
         }
+
+        console.log('Token received, saving to storage');
 
         // Save the token
         setToken(token);
 
-        // Set the default authorization header
+        // Set the default authorization header for all future requests
         apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        console.log('Authorization header set for future requests');
 
         return response.data;
     } catch (error) {
@@ -82,11 +111,15 @@ export const loginAPI = async (
 
 export const logoutAPI = async () => {
     try {
+        console.log('Attempting to logout');
+
         // Call logout endpoint if your API has one
         const response = await apiClient.post("/account/logout");
         console.log('Logout response:', response);
+
         // Handle the response
         if (response.status === 204 || response.status === 200) {
+            console.log('Logout successful');
             return true; // Logout successful
         }
     } catch (error) {
@@ -94,6 +127,7 @@ export const logoutAPI = async () => {
     } finally {
         // Clear the Authorization header
         delete apiClient.defaults.headers.common["Authorization"];
+        console.log('Authorization header cleared');
     }
 };
 

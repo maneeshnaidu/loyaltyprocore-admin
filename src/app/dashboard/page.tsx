@@ -10,34 +10,40 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 
-// import data from "./data.json"
-import { VendorTable } from "@/components/vendors/vendors-table"
-import { useVendors } from "@/hooks/use-vendors"
-import { columns } from "@/components/vendors/columns"
 import { useEffect, useState } from "react"
-import { useAuth } from "@/components/providers/auth-provider"
-import { useRouter } from "next/navigation"
 import ProtectedRoute from "@/components/protected-route"
 import RoleBasedRender from "@/components/role-based-render"
-import { SectionCards } from "@/components/section-cards"
-// import { handleError } from "../helpers/error-handler"
+import { useAuth } from "@/components/providers/auth-provider"
+import { toast } from "sonner"
+import { usePathname } from "next/navigation"
 
 export default function Page() {
-  // const router = useRouter();
-  // const { isLoggedIn } = useAuth();
-  const [activeMenu, setActiveMenu] = useState<string>("Dashboard");
-  // const { data: vendors, isLoading, error } = useVendors();
+  const { isLoggedIn, user } = useAuth();
+  const pathname = usePathname();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeMenu, setActiveMenu] = useState("Dashboard");
 
-  // // Redirect unauthenticated users to the login page
-  // useEffect(() => {
-  //   if (isLoggedIn === null) {
-  //     router.push("/login"); // Redirect to login if not authenticated
-  //   }
-  // }, [isLoggedIn, router]);
+  // Update active menu based on current path
+  useEffect(() => {
+    // Extract the first part of the path (e.g., /dashboard -> Dashboard)
+    const path = pathname.split('/')[1];
+    if (path) {
+      // Capitalize the first letter
+      const menuName = path.charAt(0).toUpperCase() + path.slice(1);
+      setActiveMenu(menuName);
+    }
+  }, [pathname]);
 
-  // if (!isLoggedIn) {
-  //   return null; // Prevent rendering until authentication is verified
-  // }
+  // Redirect unauthenticated users to the login page
+  useEffect(() => {
+    if (isLoggedIn === null) {
+      toast.error("Please login to access this page");
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn) {
+    return null; // Prevent rendering until authentication is verified
+  }
 
   return (
     <ProtectedRoute requiredRoles={["SuperAdmin", "Admin"]}>
@@ -51,7 +57,7 @@ export default function Page() {
       >
         <AppSidebar setActiveMenu={setActiveMenu} variant="inset" />
         <SidebarInset>
-          <SiteHeader user={undefined} />
+          <SiteHeader user={user} />
           <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
               <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

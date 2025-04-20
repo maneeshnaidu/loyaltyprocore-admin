@@ -21,14 +21,27 @@ export const UserProvider = ({ children }: Props) => {
     useEffect(() => {
         async function loadUser() {
             try {
+                console.log('Loading user from storage');
                 const token = getToken();
                 const userData = localStorage.getItem("user");
+
+                console.log('Token from storage:', token ? 'Token exists' : 'No token');
+                console.log('User data from storage:', userData ? 'User data exists' : 'No user data');
+
                 if (token && userData) {
+                    console.log('Setting token in API client');
                     setToken(token);
+
+                    // Set the Authorization header for all future requests
+                    apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
                     if (userData) {
                         const parsedUser = JSON.parse(userData);
+                        console.log('Setting user in state:', parsedUser);
                         setUser(parsedUser as UserProfile);
                     }
+                } else {
+                    console.log('No token or user data found in storage');
                 }
             } catch (error) {
                 console.error("Error loading user:", error);
@@ -73,6 +86,8 @@ export const UserProvider = ({ children }: Props) => {
                     localStorage.setItem("user", JSON.stringify(userObj));
                     if (res.data.token !== null) {
                         setToken(res.data.token);
+                        // Set the Authorization header for all future requests
+                        apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
                     }
                     setUser(userObj!);
                     toast.success("Login Success!");
@@ -83,11 +98,14 @@ export const UserProvider = ({ children }: Props) => {
     }
 
     const registerUser = async (
+        firstName: string,
+        lastName: string,
         email: string,
         username: string,
-        password: string
+        password: string,
+        admin: string
     ) => {
-        await registerAPI(email, username, password)
+        await registerAPI(firstName, lastName, email, username, password, admin)
             .then((res) => {
                 if (res) {
                     setToken(res?.data.token);
@@ -100,6 +118,8 @@ export const UserProvider = ({ children }: Props) => {
                     localStorage.setItem("user", JSON.stringify(userObj));
                     if (res.data.token !== null) {
                         setToken(res.data.token);
+                        // Set the Authorization header for all future requests
+                        apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
                     }
                     setUser(userObj!);
                     toast.success("Login Success!");
@@ -124,6 +144,8 @@ export const UserProvider = ({ children }: Props) => {
                     localStorage.setItem("user", JSON.stringify(userObj));
                     if (res.token !== null) {
                         setToken(res.token);
+                        // Set the Authorization header for all future requests
+                        apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
                     }
                     setUser(userObj!);
                     toast.success("Login Success!");
@@ -163,6 +185,8 @@ export const UserProvider = ({ children }: Props) => {
             const { data } = await apiClient.post<RefreshToken>('/api/account/refresh-token', { refreshToken });
 
             setToken(data.token); // Update the token in local storage
+            // Set the Authorization header for all future requests
+            apiClient.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
             return getToken(); // Return the new token
         } catch (error) {
@@ -175,6 +199,8 @@ export const UserProvider = ({ children }: Props) => {
     // Helper function to clear authentication data
     const clearAuthData = () => {
         removeToken(); // Clear the token from storage
+        localStorage.removeItem("user"); // Clear user data from storage
+        delete apiClient.defaults.headers.common["Authorization"]; // Clear the Authorization header
         setUser(null); // Reset user state
     };
 
