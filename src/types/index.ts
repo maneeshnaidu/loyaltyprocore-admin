@@ -33,7 +33,11 @@ export interface UpdateVendorResponse {
 export interface Outlet {
     id: number;
     vendorId: number;
+    name: string,
+    description: string,
+    category: string,
     address: string;
+    phoneNumber: string,
     isActive: boolean;
     createdOn: Date;
 }
@@ -45,9 +49,17 @@ export interface Reward {
     pointsRequired: number;
     description: string;
     isActive: boolean;
-    createdOn: Date;
 }
 
+export interface Transaction {
+    id: number,
+    customer: string,
+    orderNumber: string,
+    outletAddress: string,
+    points: number,
+    transactionType: string,
+    createdOn: Date
+}
 export interface Device {
     id: number;
     deviceId: string;
@@ -56,6 +68,17 @@ export interface Device {
     vendorId: number;
     isActive: boolean;
     createdOn: Date;
+}
+export interface QueryObject {
+    role?: string,
+    userCode?: number,
+    vendorId?: number,
+    outletId?: number,
+    category?: string,
+    title?: string,
+    address?: string,
+    isLatest?: boolean,
+    createdDate?: Date
 }
 
 export type Point = {
@@ -69,12 +92,58 @@ export type Point = {
     lastUpdatedOn: Date;
 }
 
+export type RegisterUser = {
+    firstName: string,
+    lastName?: string,
+    userName: string,
+    email: string,
+    password: string,
+    vendorId: number,
+    roles?: string,
+}
+
+export type UpdateUserRequestDto = {
+    firstName: string,
+    lastName?: string,
+    userName: string,
+    email: string,
+    vendorId: number,
+    roles?: string,
+}
+
+export type UpdatePointsDto = {
+    customerCode: number,
+    rewardId: number,
+    vendorId: number,
+    outletId: number,
+    orderId: number,
+    point: number,
+}
+
+export type RedeemRewardsDto = {
+    customerCode: number,
+    rewardId: number,
+    outletId: number,
+}
+
+export type UpdateUserResponseDto = {
+    id: string,
+    firstName: string,
+    lastName?: string,
+    userName: string,
+    email: string,
+    vendorId: number,
+    roles?: string,
+}
+
 export interface UserProfileToken {
     firstName: string;
     lastName: string;
     userName: string;
     email: string;
+    vendor: number;
     token: string;
+    refreshToken: string;
     roles?: string[];
 }
 
@@ -92,7 +161,7 @@ export type UserModel = {
     firstName: string,
     lastName?: string,
     userName: string,
-    password: string,
+    password?: string,
     email: string,
     vendorId?: number,
     outletId?: number,
@@ -107,28 +176,28 @@ export type RefreshToken = {
     roles: [];
 }
 
+export type ChangePassword = {
+    currentPassword: string;
+    newPassword: string;
+}
+
 export interface UserContextType {
-    user: UserProfile | null;
+    user: UserProfileToken | null;
     // token: string | null;
     loading: boolean;
-    registerVendor: (
-        firstName: string,
-        lastName: string,
-        username: string,
-        email: string,
-        password: string,
-        name: string,
-        description: string,
-        category: string
-    ) => void;
+    // registerVendor: (
+    //     firstName: string,
+    //     lastName: string,
+    //     username: string,
+    //     email: string,
+    //     password: string,
+    //     name: string,
+    //     description: string,
+    //     category: string
+    // ) => UserProfileToken;
     registerUser: (
-        firstName: string,
-        lastName: string,
-        email: string,
-        username: string,
-        password: string,
-        admin: string
-    ) => void;
+        registerModel: RegisterUser
+    ) => Promise<UserProfileToken>;
     loginUser: (
         username: string,
         password: string

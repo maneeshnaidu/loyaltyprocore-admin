@@ -1,13 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { Outlet } from '@/types';
+import { Outlet, QueryObject } from '@/types';
 
-export const useOutlets = () => {
+export const useOutlets = (query: QueryObject) => {
     return useQuery({
-        queryKey: ['outlets'],
+        queryKey: ['outlets', query],
         queryFn: async () => {
-            const response = await apiClient.get<Outlet[]>('/outlets');
-            return response.data;
+            try {
+                const response = await apiClient.get<Outlet[]>('/outlets', {
+                    params: query
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Failed to fetch outlets:', error);
+                throw error; // Let react-query handle the error
+            }
         },
     });
 };

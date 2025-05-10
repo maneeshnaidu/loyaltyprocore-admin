@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RegisterFormSchema } from "@/lib/types";
-import { UserModel } from "@/types";
+import { RegisterFormSchema, UpdateUserFormSchema } from "@/lib/types";
+import { UpdateUserRequestDto, UserModel } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -11,8 +11,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useVendors } from "@/hooks/use-vendors";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select";
+import { useUpdateUser } from "@/lib/user-service";
 
-type formSchema = z.infer<typeof RegisterFormSchema>;
+type createFormSchema = z.infer<typeof RegisterFormSchema>;
+type updateFormSchema = z.infer<typeof UpdateUserFormSchema>;
+type formSchema = createFormSchema | updateFormSchema;
 
 interface UserFormProps {
     isOpen: boolean;
@@ -23,62 +34,113 @@ interface UserFormProps {
 const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
     const { user, registerUser } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [error, setError] = useState("");
+    const { data: vendors } = useVendors();
+
+    const updateUserMutation = useUpdateUser();
 
     const form = useForm<formSchema>({
-        resolver: zodResolver(RegisterFormSchema),
+        resolver: zodResolver(userModel ? UpdateUserFormSchema : RegisterFormSchema),
         defaultValues: {
-            firstName: userModel?.firstName || "",
-            lastName: userModel?.lastName || "",
-            email: userModel?.email || "",
-            username: userModel?.userName || "",
-            password: userModel?.password || "",
-            admin: user?.userName,
+            firstName: "",
+            lastName: "",
+            email: "",
+            username: "",
+            password: "",
+            confirmPassword: "",
+            vendorId: 0,
+            roles: ""
         },
         mode: "onChange",
     });
 
     useEffect(() => {
-        if (userModel) {
-            form.reset({
-                firstName: userModel.firstName,
-                lastName: userModel.lastName,
-                email: userModel.email,
-                username: userModel.userName || "",
-            });
-        } else {
-            form.reset();
+        if (isOpen) {
+            if (userModel) {
+                form.reset({
+                    firstName: userModel.firstName || "",
+                    lastName: userModel.lastName || "",
+                    email: userModel.email || "",
+                    username: userModel.userName || "",
+                    vendorId: userModel.vendorId ?? user?.vendor ?? 0,
+                    roles: userModel.roles?.join(",") || ""
+                });
+            } else {
+                form.reset({
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    username: "",
+                    password: "",
+                    confirmPassword: "",
+                    vendorId: user?.vendor ?? 0,
+                    roles: ""
+                });
+            }
         }
-    }, [form, isOpen, userModel]);
+    }, [form, isOpen, user?.vendor, userModel]);
+
+    const showVendorDropdown = !user?.vendor && user?.roles?.includes("SuperAdmin");
+    const roleOptions = ["Admin", "Staff"];
 
     const onSubmit = async (values: formSchema) => {
         setError("");
         setIsLoading(true);
+
         if (!user) {
             toast.error("You must be logged in to perform this action.");
+            setIsLoading(false);
             return;
         }
 
-        try {
-            const username = values.username;
-            const email = values.email;
-            const password = values.password;
-            const firstName = values.firstName;
-            const lastName = values.lastName || "";
-            const admin = user.userName;
+        if (!userModel) {
+            try {
+                // Type assertion for create operation
+                const createValues = values as createFormSchema;
+                const newUser = {
+                    firstName: createValues.firstName,
+                    lastName: createValues.lastName,
+                    userName: createValues.username,
+                    email: createValues.email,
+                    password: createValues.password,
+                    vendorId: showVendorDropdown ? createValues.vendorId ?? 0 : user.vendor,
+                    roles: createValues.roles ? createValues.roles : ""
+                };
 
-            await registerUser(username, email, password, firstName, lastName, admin);
-            toast.success("User was added successfully.");
-            onOpenChange(false);
-        }
-        catch (err) {
-            setError('Error: ' + err);
-            toast.error("There was a problem with your request.");
-        } finally {
-            setIsLoading(false);
-        }
+                await registerUser(newUser);
+                toast.success(userModel ? "User updated successfully." : "User was added successfully.");
+                onOpenChange(false);
+            } catch (err) {
+                setError('Error: ' + err);
+                toast.error("There was a problem with your request.");
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            try {
+                const updateData: UpdateUserRequestDto = {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    userName: values.username,
+                    email: values.email,
+                    vendorId: values.vendorId ?? 0,
+                    roles: values.roles
+                };
 
+                await updateUserMutation.mutateAsync({
+                    id: userModel.id,
+                    data: updateData
+                });
+
+                toast.success("User updated successfully");
+                onOpenChange(false);
+            } catch {
+                console.error(error);
+                toast.error("Failed to update user");
+            } finally {
+                setIsLoading(false);
+            }
+        }
     };
 
     return (
@@ -89,9 +151,9 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                     Add User
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-[600px] w-full max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Create User</DialogTitle>
+                    <DialogTitle>{userModel ? 'Update User' : 'Create User'}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -109,6 +171,7 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                                 </FormItem>
                             )}
                         />
+
                         {/* LastName Field */}
                         <FormField
                             name="lastName"
@@ -123,12 +186,14 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                                 </FormItem>
                             )}
                         />
+
                         {/* Username Field */}
                         <FormField
                             name="username"
                             control={form.control}
                             render={({ field }) => (
                                 <FormItem>
+                                    <FormLabel>Username</FormLabel>
                                     <FormControl>
                                         <Input {...field} />
                                     </FormControl>
@@ -136,6 +201,7 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                                 </FormItem>
                             )}
                         />
+
                         {/* Email Field */}
                         <FormField
                             name="email"
@@ -151,20 +217,99 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                             )}
                         />
                         {/* Password Field */}
+                        {!userModel && (
+                            <>
+                                <FormField
+                                    name="password"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Password</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="********" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Confirm Password Field */}
+                                <FormField
+                                    name="confirmPassword"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Confirm Password</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="********" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </>
+                        )}
+                        {/* Vendor Dropdown */}
+                        {showVendorDropdown && (
+                            <FormField
+                                name="vendorId"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Vendor</FormLabel>
+                                        <Select
+                                            onValueChange={(value) => field.onChange(Number(value))}
+                                            value={field.value?.toString() ?? ""}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a vendor" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {vendors?.map((vendor) => (
+                                                    <SelectItem
+                                                        key={vendor.id}
+                                                        value={vendor.id.toString()}
+                                                    >
+                                                        {vendor.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                        {/* Role Select */}
                         <FormField
-                            name="password"
+                            name="roles"
                             control={form.control}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Password</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" placeholder="********" {...field} />
-                                    </FormControl>
+                                    <FormLabel>Roles</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value || ""}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select roles" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {roleOptions.map((role) => (
+                                                <SelectItem key={role} value={role}>
+                                                    {role}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-
                         <DialogFooter>
                             <Button
                                 type="submit"
@@ -172,7 +317,7 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
                                 disabled={isLoading}
                             >
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Confirm
+                                {userModel ? 'Update' : 'Create'} User
                             </Button>
                         </DialogFooter>
                     </form>
@@ -183,4 +328,3 @@ const UserForm = ({ isOpen, userModel, onOpenChange }: UserFormProps) => {
 }
 
 export default UserForm;
-

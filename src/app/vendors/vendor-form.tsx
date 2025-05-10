@@ -70,28 +70,9 @@ const VendorForm = ({ isOpen, vendor, onOpenChange }: VendorFormProps) => {
     }, [form, isOpen, vendor]);
 
     const onSubmit = async (values: formSchema) => {
-        console.log(vendor);
         if (!vendor) {
             try {
                 const formData = new FormData();
-                // formData.append("firstName", values.firstName);
-                // formData.append("lastName", values.lastName);
-                // formData.append("username", values.username);
-                // formData.append("email", values.email);
-                // formData.append("password", values.password);
-                // formData.append("name", values.name);
-                // formData.append("description", values.description);
-                // formData.append("category", values.category);
-                // if (values.logoImage) {
-                //     formData.append("logoImage", values.logoImage);
-                // }
-                // if (values.coverImage) {
-                //     formData.append("coverImage", values.coverImage);
-                // }
-                // await createVendorMutation.mutateAsync(formData);
-                // toast.success("Vendor was added successfully.");
-                // onOpenChange(false);
-                // Append all values
                 Object.entries(values).forEach(([key, value]) => {
                     if (value !== undefined && value !== null) {
                         if (key === 'logoImage' || key === 'coverImage') {
@@ -103,9 +84,9 @@ const VendorForm = ({ isOpen, vendor, onOpenChange }: VendorFormProps) => {
                 });
 
                 // Log FormData contents (for debugging)
-                for (const [key, value] of formData.entries()) {
-                    console.log(key, value);
-                }
+                // for (const [key, value] of formData.entries()) {
+                //     console.log(key, value);
+                // }
 
                 try {
                     await createVendorMutation.mutateAsync(formData);
@@ -121,26 +102,6 @@ const VendorForm = ({ isOpen, vendor, onOpenChange }: VendorFormProps) => {
                 toast.error("There was a problem with your request.");
             }
         } else {
-            // try {
-            // const formData = new FormData();
-            // formData.append("id", vendor.id); // Make sure to include the ID
-            // formData.append("name", values.name);
-            // formData.append("description", values.description || "");
-            // formData.append("category", values.category);
-            // if (values.logoImage) {
-            //     formData.append("logoImage", values.logoImage);
-            // }
-            // if (values.coverImage) {
-            //     formData.append("coverImage", values.coverImage);
-            // }
-            // await updateVendorMutation.mutateAsync(formData);
-            // toast.success("Vendor was updated successfully.");
-            // onOpenChange(false);
-
-            // } catch (error) {
-            //     console.error(error);
-            //     toast.error("There was a problem with your request.");
-            // }
             try {
                 const updateData: UpdateVendorRequestDto = {
                     name: values.name,

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// import { loginUser } from "@/lib/auth-service";
 import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 
@@ -25,11 +24,10 @@ const AuthForm = () => {
     const searchParams = useSearchParams();
     const returnUrl = searchParams.get('returnUrl') || '/dashboard';
 
-    // Handle hydration mismatch
     useEffect(() => {
-        // Check if the user is already logged in
         if (user) {
-            router.push(returnUrl); // Redirect to the return URL if already logged in
+            console.log(returnUrl);
+            router.push(returnUrl);
         }
         setMounted(true);
     }, [returnUrl, router, user]);
@@ -45,7 +43,7 @@ const AuthForm = () => {
 
         try {
             await loginUser(username, password);
-            router.push(returnUrl); // Redirect to the return URL after successful login
+            router.push(returnUrl);
         } catch (err) {
             setError('Error: ' + err);
             toast.error("Invalid credentials. Please try again.");
@@ -54,24 +52,25 @@ const AuthForm = () => {
         }
     };
 
-    // Prevent hydration issues by not rendering until mounted
     if (!mounted) {
         return null;
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
-            <Card className="w-full max-w-sm">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-                    <CardDescription className="text-center">
+        <div className="flex min-h-screen items-center justify-center p-4">
+            <Card className="w-full max-w-md mx-auto">
+                <CardHeader className="space-y-1 px-6 pt-6 pb-2 sm:px-8 sm:pt-8">
+                    <CardTitle className="text-2xl font-bold text-center sm:text-3xl">
+                        Login
+                    </CardTitle>
+                    <CardDescription className="text-center text-sm sm:text-base">
                         Enter your credentials to access your account
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
+                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                         {error && (
-                            <div className="text-sm text-destructive text-center font-medium">
+                            <div className="text-sm text-destructive text-center font-medium px-2 py-1 rounded bg-destructive/10">
                                 {error}
                             </div>
                         )}
@@ -84,6 +83,7 @@ const AuthForm = () => {
                                 type="text"
                                 required
                                 disabled={isLoading}
+                                className="h-10 sm:h-11 text-sm sm:text-base"
                             />
                         </div>
                         <div className="space-y-2">
@@ -102,20 +102,21 @@ const AuthForm = () => {
                                 type="password"
                                 required
                                 disabled={isLoading}
+                                className="h-10 sm:h-11 text-sm sm:text-base"
                             />
                         </div>
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full h-10 sm:h-11 text-sm sm:text-base"
                             disabled={isLoading}
                         >
                             {isLoading ? "Signing in..." : "Sign in"}
                         </Button>
-                        <div className="text-center text-sm">
+                        <div className="text-center text-sm sm:text-base">
                             Don&apos;t have an account?{" "}
                             <a
                                 href="/register"
-                                className="text-primary hover:underline"
+                                className="text-primary hover:underline font-medium"
                             >
                                 Sign up
                             </a>

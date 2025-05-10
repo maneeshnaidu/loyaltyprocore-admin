@@ -1,6 +1,6 @@
 "use client"
 
-import { UserModel } from "@/types"
+import { Transaction } from "@/types"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
 
@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableRowActions from "@/components/data-table-row-actions"
 
-interface UserColumnProps {
-    onEdit: (user: UserModel) => void
-    onDelete: (user: UserModel) => void
+interface TransactionColumnProps {
+    onEdit: (transaction: Transaction) => void
+    onDelete: (transaction: Transaction) => void
 }
 
 
-export const getUserColumns = ({ onEdit, onDelete }: UserColumnProps): ColumnDef<UserModel>[] => [
+export const getTransactionColumns = ({ onEdit, onDelete }: TransactionColumnProps): ColumnDef<Transaction>[] => [
     {
         id: "select",
         header: ({ table }) => (
@@ -34,34 +34,61 @@ export const getUserColumns = ({ onEdit, onDelete }: UserColumnProps): ColumnDef
                 aria-label="Select row"
             />
         ),
-        enableSorting: false,
+        enableSorting: true,
         enableHiding: false,
     },
     {
-        accessorKey: "firstName",
+        accessorKey: "id",
+        header: "Id",
+    },
+    {
+        accessorKey: "customer",
+        header: "Customer",
+    },
+    {
+        accessorKey: "orderNumber",
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    First Name
+                    Order Number
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             )
         },
     },
     {
-        accessorKey: "lastName",
-        header: "Last Name"
+        accessorKey: "points",
+        header: "Points"
     },
     {
-        accessorKey: "userName",
-        header: "Username"
+        accessorKey: "outletAddress",
+        header: "Outlet"
     },
     {
-        accessorKey: "email",
-        header: "Email"
+        accessorKey: "transactionType",
+        header: "Transaction Type"
+    },
+    {
+        accessorKey: "createdOn",
+        header: () => <div className="text-right">Created On</div>,
+        cell: ({ row }) => {
+            const createdOn = row.getValue("createdOn") as string | number | Date;
+            const formatted = new Intl.DateTimeFormat("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+            }).format(new Date(createdOn));
+
+            return <div className="text-right font-medium">{formatted}</div>
+
+        },
     },
     {
         id: "actions",
@@ -69,5 +96,6 @@ export const getUserColumns = ({ onEdit, onDelete }: UserColumnProps): ColumnDef
         cell: ({ row }) => <DataTableRowActions row={row} onEdit={onEdit} onDelete={onDelete} />,
     },
 ]
+
 
 

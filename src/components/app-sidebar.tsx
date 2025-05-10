@@ -3,21 +3,21 @@
 import * as React from "react"
 import {
   IconCamera,
-  IconChartBar,
   IconDashboard,
   IconDatabase,
   IconFileAi,
   IconFileDescription,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
-  IconBuildingCommunity
+  IconBuildingCommunity,
+  IconTrophy,
+  IconBuildingStore,
+  IconLayersIntersect
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -50,17 +50,17 @@ const data = {
     {
       title: "Outlets",
       url: "/outlets",
-      icon: IconListDetails,
+      icon: IconBuildingStore,
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Rewards",
+      url: "/rewards",
+      icon: IconTrophy,
     },
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
+      title: "Transactions",
+      url: "/transactions",
+      icon: IconLayersIntersect,
     },
     {
       title: "Team",
@@ -153,10 +153,8 @@ const data = {
 }
 
 export function AppSidebar({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setActiveMenu,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { setActiveMenu: (menu: string) => void }) {
+}: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth()
 
   // Determine user role and set active menu

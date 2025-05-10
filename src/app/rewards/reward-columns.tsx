@@ -1,6 +1,6 @@
 "use client"
 
-import { Outlet } from "@/types"
+import { Reward } from "@/types"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, CheckCircle2Icon, LoaderIcon } from "lucide-react"
 
@@ -9,13 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import DataTableRowActions from "@/components/data-table-row-actions"
 import { Badge } from "@/components/ui/badge"
 
-interface OutletColumnProps {
-    onEdit: (outlet: Outlet) => void
-    onDelete: (outlet: Outlet) => void
+interface RewardColumnProps {
+    onEdit: (reward: Reward) => void
+    onDelete: (reward: Reward) => void
 }
 
 
-export const getOutletColumns = ({ onEdit, onDelete }: OutletColumnProps): ColumnDef<Outlet>[] => [
+export const getRewardColumns = ({ onEdit, onDelete }: RewardColumnProps): ColumnDef<Reward>[] => [
     {
         id: "select",
         header: ({ table }) => (
@@ -35,7 +35,7 @@ export const getOutletColumns = ({ onEdit, onDelete }: OutletColumnProps): Colum
                 aria-label="Select row"
             />
         ),
-        enableSorting: false,
+        enableSorting: true,
         enableHiding: false,
     },
     {
@@ -43,18 +43,30 @@ export const getOutletColumns = ({ onEdit, onDelete }: OutletColumnProps): Colum
         header: "Id",
     },
     {
-        accessorKey: "address",
+        accessorKey: "vendorId",
+        header: "Vendor",
+    },
+    {
+        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Address
+                    Title
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             )
         },
+    },
+    {
+        accessorKey: "description",
+        header: "Description"
+    },
+    {
+        accessorKey: "pointsRequired",
+        header: "Required Points"
     },
     {
         accessorKey: "isActive",
@@ -99,14 +111,5 @@ export const getOutletColumns = ({ onEdit, onDelete }: OutletColumnProps): Colum
     },
 ]
 
-// const handleToggleActive = async (id: string) => {
-//     try {z
-//         // Call your API to toggle the active state
-//         await apiClient.patch(`/outlets/${id}/toggle-active`);
 
-//         console.log(`Vendor ${id} active state toggled successfully.`);
-//     } catch (error) {
-//         console.error("Failed to toggle vendor status:", error);
-//     }
-// };
 

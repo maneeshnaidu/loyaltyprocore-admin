@@ -4,13 +4,14 @@ import { Outlet } from '@/types';
 import React, { useCallback, useMemo, useState } from 'react'
 import { getOutletColumns } from './outlet-columns';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/data-table';
 import OutletForm from './outlet-form';
 import ProtectedRoute from '@/components/protected-route';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { SiteHeader } from '@/components/site-header';
 import { AppSidebar } from '@/components/app-sidebar';
+import RoleBasedRender from '@/components/role-based-render';
+import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton';
 
 const OutletsPage = () => {
     const { data: outlets, isLoading } = useOutlets();
@@ -48,33 +49,37 @@ const OutletsPage = () => {
                     } as React.CSSProperties
                 }
             >
-                <AppSidebar setActiveMenu={setActiveMenu} variant="inset" />
+                <AppSidebar variant="inset" />
                 <SidebarInset>
                     <SiteHeader user={undefined} />
-                    <Card className="h-full">
-                        <CardHeader>
-                            <CardTitle>Outlets</CardTitle>
-                            <div className="flex justify-between">
-                                <div />
-                                <div className="flex-nowrap">
-                                    <OutletForm
-                                        isOpen={isDialogOpen}
-                                        outlet={selectedOultet}
-                                        onOpenChange={(value) => {
-                                            setIsDialogOpen(value);
-                                            if (!value) {
-                                                setSelectedOutlet(null);
-                                            }
-                                        }}
-                                    />
+                    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                        <div className="@container/main flex flex-1 flex-col gap-2">
+                            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                                <div className="flex justify-between mt-3 items-center py-4">
+                                    <div />
+                                    <RoleBasedRender allowedRoles={['SuperAdmin', 'Admin']}>
+                                        <OutletForm
+                                            isOpen={isDialogOpen}
+                                            outlet={selectedOultet}
+                                            onOpenChange={(value) => {
+                                                setIsDialogOpen(value);
+                                                if (!value) {
+                                                    setSelectedOutlet(null);
+                                                }
+                                            }}
+                                        />
+                                    </RoleBasedRender>
+                                </div>
+                                <div className="container mx-auto">
+                                    {isLoading ? (
+                                        <DataTableSkeleton columns={columns.entries.length} />
+                                    ) : (
+                                        <DataTable data={outlets ? outlets : []} columns={columns} />
+                                    )}
                                 </div>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoading && <span>Loading</span>}
-                            {!isLoading && <DataTable data={outlets ? outlets : []} columns={columns} />}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </SidebarInset>
             </SidebarProvider >
         </ProtectedRoute>

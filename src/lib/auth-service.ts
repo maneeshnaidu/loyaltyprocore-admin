@@ -1,7 +1,8 @@
-import { UserProfileToken } from "@/types";
+import { ChangePassword, RegisterUser, UserProfileToken } from "@/types";
 import apiClient from "./api-client";
 import { setToken } from "./auth-storage";
 import { handleError } from "@/app/helpers/error-handler";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const registerVendorAPI = async (
     firstName: string,
@@ -31,42 +32,17 @@ export const registerVendorAPI = async (
 };
 
 export const registerAPI = async (
-    firstName: string,
-    lastName: string,
-    email: string,
-    username: string,
-    password: string,
-    admin: string
+    registerModel: RegisterUser
 ) => {
-    if (admin == null || admin == "") {
-        try {
-            const response = await apiClient.post<UserProfileToken>("/account/register", {
-                firstName,
-                lastName,
-                email,
-                username,
-                password,
-                admin
-            });
-            return response;
-        } catch (error) {
-            handleError(error);
-        }
-    } else {
-        try {
-            const response = await apiClient.post<UserProfileToken>("/users/add-staff", {
-                firstName,
-                lastName,
-                email,
-                username,
-                password,
-                admin
-            });
-            return response;
-        } catch (error) {
-            handleError(error);
-        }
+    try {
+        const response = await apiClient.post<UserProfileToken>("/account/register", {
+            registerModel
+        });
+        return response;
+    } catch (error) {
+        handleError(error);
     }
+
 };
 
 export const loginAPI = async (
@@ -129,5 +105,17 @@ export const logoutAPI = async () => {
         delete apiClient.defaults.headers.common["Authorization"];
         console.log('Authorization header cleared');
     }
+};
+
+export const useChangePassword = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (changePassword: ChangePassword) =>
+            apiClient.post(`/change-password/`, changePassword),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
 };
 

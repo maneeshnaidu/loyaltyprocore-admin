@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVendors } from "@/hooks/use-vendors";
 
 type formSchema = z.infer<typeof OutletFormSchema>;
 
@@ -26,28 +28,40 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
     const createOutletMutation = useCreateOutlet();
     const updateOutletMutation = useUpdateOutlet();
     const { user } = useAuth();
+    const { data: vendors } = useVendors();
 
     const form = useForm<formSchema>({
         resolver: zodResolver(OutletFormSchema),
         defaultValues: {
-            address: outlet?.address || "",
             userName: user?.userName || "",
-            isActive: outlet?.isActive,
+            vendorId: 0,
+            name: "",
+            description: "",
+            category: "",
+            address: "",
+            phoneNumber: "",
+            coverImage: undefined,
+            isActive: true,
         },
         mode: "onChange",
     });
 
+    const showVendorDropdown = !user?.vendor && user?.roles?.includes("SuperAdmin");
+
     useEffect(() => {
-        if (outlet) {
+        if (isOpen) {
             form.reset({
-                address: outlet.address,
                 userName: user?.userName || "",
-                isActive: outlet.isActive,
+                vendorId: outlet?.vendorId || user?.vendor || 0,
+                name: outlet?.name || "",
+                description: outlet?.description || "",
+                category: outlet?.category || "",
+                address: outlet?.address || "",
+                phoneNumber: outlet?.phoneNumber || "",
+                isActive: outlet?.isActive ?? true,
             });
-        } else {
-            form.reset();
         }
-    }, [form, isOpen, outlet, user?.userName]);
+    }, [form, isOpen, outlet, user]);
 
     const onSubmit = async (values: formSchema) => {
         if (!user) {
@@ -58,9 +72,25 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
         if (!outlet) {
             try {
                 const formData = new FormData();
-                formData.append("address", values.address);
-                formData.append("userName", values.userName);
-                formData.append("isActive", values.isActive.toString());
+                Object.entries(values).forEach(([key, value]) => {
+                    if (value !== undefined && value !== null) {
+                        if (key === 'coverImage') {
+                            // Handle File/Blob types
+                            if (value instanceof File) {
+                                formData.append(key, value, (value as File).name || key);
+                                return;
+                            }
+                        } else {
+                            formData.append(key, String(value));
+                        }
+                    }
+                });
+
+                // Log FormData contents (for debugging)
+                // for (const [key, value] of formData.entries()) {
+                //     console.log(key, value);
+                // }
+
                 await createOutletMutation.mutateAsync(formData);
                 toast.success("Outlet was added successfully.");
                 onOpenChange(false);
@@ -74,7 +104,6 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
                 const updatedOutlet = {
                     ...outlet,
                     address: values.address,
-                    userName: values.userName,
                     isActive: values.isActive,
                 };
                 await updateOutletMutation.mutateAsync(updatedOutlet);
@@ -88,19 +117,98 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+            onOpenChange(open);
+            if (!open) form.reset();
+        }}>
             <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Add Outlet
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-[600px] w-full max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{outlet ? 'Update the outlet' : 'Create new outlet'}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        {/* Vendor Dropdown */}
+                        {showVendorDropdown && (
+                            <FormField
+                                name="vendorId"
+                                control={form.control}
+                                disabled={outlet != null}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Vendor</FormLabel>
+                                        <Select
+                                            onValueChange={(value) => field.onChange(Number(value))}
+                                            value={field.value?.toString() ?? ""}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a vendor" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {vendors?.map((vendor) => (
+                                                    <SelectItem
+                                                        key={vendor.id}
+                                                        value={vendor.id.toString()}
+                                                    >
+                                                        {vendor.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                        {/* Name */}
+                        <FormField
+                            name="name"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        {/* Description */}
+                        <FormField
+                            name="description"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        {/* Category */}
+                        <FormField
+                            name="category"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         {/* Address Field */}
                         <FormField
                             name="address"
@@ -115,17 +223,43 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
                                 </FormItem>
                             )}
                         />
-                        {/* Hidden Username Field */}
+                        {/* Phone Number */}
                         <FormField
-                            name="userName"
+                            name="phoneNumber"
                             control={form.control}
                             render={({ field }) => (
-                                <FormItem className="hidden">
+                                <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
                                     <FormControl>
-                                        <Input type="hidden" {...field} />
+                                        <Input placeholder="" {...field} />
                                     </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )}
+                        />
+                        {/* Cover Image */}
+                        <FormField
+                            name="coverImage"
+                            control={form.control}
+                            render={({ field }) => {
+                                const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+                                    const file = event.target.files?.[0];
+                                    field.onChange(file);
+                                };
+
+                                return (
+                                    <FormItem>
+                                        <FormLabel>Cover Image</FormLabel>
+                                        <FormControl>
+                                            <Input type="file"
+                                                onChange={handleFileChange}
+                                                ref={field.ref}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                );
+                            }}
                         />
                         {/* isActive Field */}
                         {outlet ? (
@@ -165,10 +299,13 @@ const OutletForm = ({ isOpen, outlet, onOpenChange }: OutletFormProps) => {
                         <DialogFooter>
                             <Button
                                 type="submit"
-                                disabled={!form.formState.isValid || createOutletMutation.isPending}
+                                disabled={
+                                    (!outlet && !form.formState.isValid) ||
+                                    createOutletMutation.isPending
+                                }
                             >
                                 {createOutletMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Confirm
+                                {outlet ? 'Update' : 'Create'}
                             </Button>
                         </DialogFooter>
                     </form>

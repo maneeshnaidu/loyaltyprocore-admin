@@ -30,27 +30,12 @@ export const useCreateVendor = () => {
 export const useDeleteVendor = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: string) => apiClient.delete(`/vendors/${id}`),
+        mutationFn: (id: number) => apiClient.delete(`/vendors/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['vendors'] });
         },
     });
 };
-
-// export const useUpdateVendor = () => {
-//     return useMutation({
-//         mutationFn: async (formData: FormData) => {
-//             const response = await fetch('/api/vendors', {
-//                 method: 'PUT',
-//                 body: formData, // No JSON.stringify needed for FormData
-//             });
-//             if (!response.ok) {
-//                 throw new Error('Network response was not ok');
-//             }
-//             return response.json();
-//         }
-//     });
-// }
 
 export const useUpdateVendor = () => {
     const queryClient = useQueryClient();

@@ -1,9 +1,9 @@
 "use client"
 
 import apiClient from "@/lib/api-client";
-import { loginAPI, logoutAPI, registerAPI, registerVendorAPI } from "@/lib/auth-service";
+import { loginAPI, logoutAPI } from "@/lib/auth-service";
 import { getToken, removeToken, setToken } from "@/lib/auth-storage";
-import { RefreshToken, UserContextType, UserProfile } from "@/types";
+import { RefreshToken, RegisterUser, UserContextType, UserProfileToken } from "@/types";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -14,7 +14,7 @@ const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export const UserProvider = ({ children }: Props) => {
     const router = useRouter();
-    const [user, setUser] = useState<UserProfile | null>(null);
+    const [user, setUser] = useState<UserProfileToken | null>(null);
     const [loading, setLoading] = useState(true);
 
     // Initializing token and user from local storage
@@ -38,7 +38,7 @@ export const UserProvider = ({ children }: Props) => {
                     if (userData) {
                         const parsedUser = JSON.parse(userData);
                         console.log('Setting user in state:', parsedUser);
-                        setUser(parsedUser as UserProfile);
+                        setUser(parsedUser as UserProfileToken);
                     }
                 } else {
                     console.log('No token or user data found in storage');
@@ -54,81 +54,92 @@ export const UserProvider = ({ children }: Props) => {
         loadUser();
     }, []);
 
-    const registerVendor = async (
-        firstName: string,
-        lastName: string,
-        username: string,
-        email: string,
-        password: string,
-        name: string,
-        description: string,
-        category: string
-    ) => {
-        await registerVendorAPI(
-            firstName,
-            lastName,
-            username,
-            email,
-            password,
-            name,
-            description,
-            category
-        )
-            .then((res) => {
-                if (res) {
-                    setToken(res?.data.token);
-                    const userObj = {
-                        firstName: res?.data.firstName,
-                        lastName: res?.data.lastName,
-                        userName: res?.data.userName,
-                        email: res?.data.email,
-                    };
-                    localStorage.setItem("user", JSON.stringify(userObj));
-                    if (res.data.token !== null) {
-                        setToken(res.data.token);
-                        // Set the Authorization header for all future requests
-                        apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-                    }
-                    setUser(userObj!);
-                    toast.success("Login Success!");
-                }
-            })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .catch((e) => toast.warning("Server error occured"));
-    }
+    // const registerVendor = async (
+    //     firstName: string,
+    //     lastName: string,
+    //     username: string,
+    //     email: string,
+    //     password: string,
+    //     name: string,
+    //     description: string,
+    //     category: string
+    // ) => {
+    //     await registerVendorAPI(
+    //         firstName,
+    //         lastName,
+    //         username,
+    //         email,
+    //         password,
+    //         name,
+    //         description,
+    //         category
+    //     )
+    //         .then((res) => {
+    //             if (res) {
+    //                 setToken(res?.data.token);
+    //                 const userObj = {
+    //                     firstName: res?.data.firstName,
+    //                     lastName: res?.data.lastName,
+    //                     userName: res?.data.userName,
+    //                     email: res?.data.email,
+    //                     vendor: res?.data.vendor,
+    //                     token: res?.data.token,
+    //                     refreshToken: res?.data.refreshToken,
+    //                     roles: res?.data.roles
+    //                 };
+    //                 localStorage.setItem("user", JSON.stringify(userObj));
+    //                 if (res.data.token !== null) {
+    //                     setToken(res.data.token);
+    //                     // Set the Authorization header for all future requests
+    //                     apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+    //                 }
+    //                 setUser(userObj!);
+    //                 toast.success("Login Success!");
+    //             }
+    //         })
+    //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //         .catch((e) => toast.warning("Server error occured"));
+    // }
 
-    const registerUser = async (
-        firstName: string,
-        lastName: string,
-        email: string,
-        username: string,
-        password: string,
-        admin: string
-    ) => {
-        await registerAPI(firstName, lastName, email, username, password, admin)
-            .then((res) => {
-                if (res) {
-                    setToken(res?.data.token);
-                    const userObj = {
-                        firstName: res?.data.firstName,
-                        lastName: res?.data.lastName,
-                        userName: res?.data.userName,
-                        email: res?.data.email,
-                    };
-                    localStorage.setItem("user", JSON.stringify(userObj));
-                    if (res.data.token !== null) {
-                        setToken(res.data.token);
-                        // Set the Authorization header for all future requests
-                        apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-                    }
-                    setUser(userObj!);
-                    toast.success("Login Success!");
-                    router.push("/dashboard");
-                }
-            })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .catch((e) => toast.warning("Server error occured"));
+    const registerUser = async (registerModel: RegisterUser): Promise<UserProfileToken> => {
+        // Simulate an API call
+        const response = await apiClient.post('/account/register', registerModel);
+
+        // Ensure the response contains the required fields
+        return response.data as UserProfileToken;
     };
+
+    // const registerUser = async (
+    //     registerModel: RegisterUser
+    // ) => {
+    //     await registerAPI(registerModel)
+    //         .then((res) => {
+    //             if (res) {
+    //                 setToken(res?.data.token);
+    //                 const userObj = {
+    //                     firstName: res?.data.firstName,
+    //                     lastName: res?.data.lastName,
+    //                     userName: res?.data.userName,
+    //                     email: res?.data.email,
+    //                     vendor: res?.data.vendor,
+    //                     token: res?.data.token,
+    //                     refreshToken: res?.data.refreshToken,
+    //                     roles: res?.data.roles
+    //                 };
+    //                 localStorage.setItem("user", JSON.stringify(userObj));
+    //                 if (res.data.token !== null) {
+    //                     setToken(res.data.token);
+    //                     // Set the Authorization header for all future requests
+    //                     apiClient.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+    //                 }
+    //                 setUser(userObj!);
+    //                 toast.success("Login Success!");
+    //                 router.push("/dashboard");
+    //             }
+    //         })
+    //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //         .catch((e) => toast.warning("Server error occured"));
+    // };
 
     const loginUser = async (username: string, password: string) => {
         await loginAPI(username, password)
@@ -139,7 +150,10 @@ export const UserProvider = ({ children }: Props) => {
                         lastName: res?.lastName,
                         userName: res?.userName,
                         email: res?.email,
-                        roles: res?.roles,
+                        vendor: res?.vendor,
+                        token: res?.token,
+                        refreshToken: res?.refreshToken,
+                        roles: res?.roles || [],
                     };
                     localStorage.setItem("user", JSON.stringify(userObj));
                     if (res.token !== null) {
@@ -156,8 +170,10 @@ export const UserProvider = ({ children }: Props) => {
             .catch((e) => toast.warning("Server error occured"));
     };
 
-    const isLoggedIn = () => {
-        return !!user;
+    const isLoggedIn = (requiredRoles?: string[]) => {
+        if (!user) return false;
+        if (!requiredRoles) return true;
+        return requiredRoles.some(role => user.roles?.includes(role));
     };
 
     const logoutUser = async () => {
@@ -213,7 +229,7 @@ export const UserProvider = ({ children }: Props) => {
                 logoutUser,
                 isLoggedIn,
                 registerUser,
-                registerVendor,
+                // registerVendor,
                 refreshToken
             }}
         >
