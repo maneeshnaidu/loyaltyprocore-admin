@@ -4,10 +4,8 @@ import * as React from "react"
 import {
   IconCamera,
   IconDashboard,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
   IconHelp,
   IconInnerShadowTop,
   IconReport,
@@ -16,8 +14,7 @@ import {
   IconUsers,
   IconBuildingCommunity,
   IconTrophy,
-  IconBuildingStore,
-  IconLayersIntersect
+  IconBuildingStore
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -58,11 +55,6 @@ const data = {
       icon: IconTrophy,
     },
     {
-      title: "Transactions",
-      url: "/transactions",
-      icon: IconLayersIntersect,
-    },
-    {
       title: "Team",
       url: "/users",
       icon: IconUsers,
@@ -70,7 +62,7 @@ const data = {
   ],
   navClouds: [
     {
-      title: "Capture",
+      title: "Scan",
       icon: IconCamera,
       isActive: true,
       url: "#",
@@ -135,19 +127,9 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
       name: "Reports",
       url: "#",
       icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
     },
   ],
 }
