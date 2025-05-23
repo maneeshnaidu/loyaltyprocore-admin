@@ -15,7 +15,7 @@ export const registerVendorAPI = async (
     category: string
 ) => {
     try {
-        const response = await apiClient.post<UserProfileToken>("/account/register-vendor", {
+        const response = await apiClient.post<UserProfileToken>("/auth/register-vendor", {
             firstName,
             lastName,
             username,
@@ -35,7 +35,7 @@ export const registerAPI = async (
     registerModel: RegisterUser
 ) => {
     try {
-        const response = await apiClient.post<UserProfileToken>("/account/register", {
+        const response = await apiClient.post<UserProfileToken>("/auth/register", {
             registerModel
         });
         return response;
@@ -52,7 +52,7 @@ export const loginAPI = async (
     try {
         console.log('Attempting login with username:', username);
 
-        const response = await apiClient.post<UserProfileToken>("/account/login", {
+        const response = await apiClient.post<UserProfileToken>("/auth/login", {
             username,
             password,
         });
@@ -90,7 +90,7 @@ export const logoutAPI = async () => {
         console.log('Attempting to logout');
 
         // Call logout endpoint if your API has one
-        const response = await apiClient.post("/account/logout");
+        const response = await apiClient.post("/auth/logout");
         console.log('Logout response:', response);
 
         // Handle the response

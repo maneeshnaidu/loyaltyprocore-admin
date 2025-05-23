@@ -2,7 +2,7 @@ import apiClient from "@/lib/api-client";
 import { QueryObject, Reward } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useRewards = (query: QueryObject) => {
+export const useRewards = (query?: QueryObject) => {
     return useQuery({
         queryKey: ['rewards', query],
         queryFn: async () => {

@@ -2,7 +2,7 @@ import apiClient from "@/lib/api-client";
 import { QueryObject, Transaction } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
-export const useTransactions = (query: QueryObject) => {
+export const useTransactions = (query?: QueryObject) => {
     return useQuery({
         queryKey: ['transactions', query],
         queryFn: async () => {

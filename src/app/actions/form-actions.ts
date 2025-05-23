@@ -20,7 +20,7 @@ export const handleLogin = async (formData: FormData) => {
     const password = formData.get("password");
 
     try {
-        const res = await apiClient.post("/account/login", {
+        const res = await apiClient.post("/auth/login", {
             username,
             password,
         });

@@ -12,7 +12,7 @@ export default function LogoutPage() {
     const performLogout = async () => {
       try {
         // Call our API route to handle backend logout
-        await apiClient.post('/account/logout')
+        await apiClient.post('/auth/logout')
 
         // Clear local token
         removeToken()
