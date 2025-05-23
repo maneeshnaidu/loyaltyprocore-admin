@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
 import { Outlet, QueryObject } from '@/types';
 
-export const useOutlets = (query: QueryObject) => {
+export const useOutlets = (query?: QueryObject) => {
     return useQuery({
         queryKey: ['outlets', query],
         queryFn: async () => {

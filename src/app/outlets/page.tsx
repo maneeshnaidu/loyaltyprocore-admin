@@ -30,7 +30,7 @@ const OutletsPage = () => {
     const onDelete = useCallback(async (outlet: Outlet) => {
         await deleteOutletMutation.mutateAsync(outlet.id, {
             onSuccess: () => {
-                toast.success('Bank account was deleted successfully.');
+                toast.success('Outlet was deleted successfully.');
             },
             onError: () => {
                 toast.error('There was a problem with your request.');
